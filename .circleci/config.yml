@@ -17,13 +17,13 @@ jobs:
           command: |
             python -m venv venv
             . venv/bin/activate
-            pip install -r requirements.txt
+            pip install -r cab_booking/requirements.txt
 
       - run:
           name: Run Tests
           command: |
             . venv/bin/activate
-            python manage.py test
+            python cab_booking/manage.py test
 
 workflows:
   version: 2
