@@ -1,32 +1,78 @@
 version: 2.1
 
-jobs:
-  test:
+executors:
+  docker-executor:
     docker:
       - image: circleci/python:3.8
       - image: circleci/postgres:12.3
-        environment:
-          POSTGRES_USER: cab
-          POSTGRES_DB: cab
-          POSTGRES_PASSWORD: 12345678
+
+jobs:
+  build:
+    docker:
+      - image: circleci/python:3.8
     steps:
       - checkout
-
+      - setup_remote_docker
       - run:
           name: Install dependencies
           command: |
             python -m venv venv
             . venv/bin/activate
             pip install -r cab_booking/requirements.txt
-
       - run:
-          name: Run Tests
+          name: Build Docker image
+          command: docker build -t myapp:${CIRCLE_SHA1} .
+      - persist_to_workspace:
+          root: .
+          paths:
+            - .
+
+  push_to_ecr:
+    docker:
+      - image: circleci/python:3.8
+    steps:
+      - checkout
+      - setup_remote_docker
+      - attach_workspace:
+          at: .
+      - run:
+          name: Install AWS CLI
+          command: pip install awscli
+      - run:
+          name: Authenticate with ECR
           command: |
-            . venv/bin/activate
-            python cab_booking/manage.py test
+            aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin <your-account-id>.dkr.ecr.us-east-1.amazonaws.com
+      - run:
+          name: Push Docker image to ECR
+          command: |
+            docker tag myapp:${CIRCLE_SHA1} <your-account-id>.dkr.ecr.us-east-1.amazonaws.com/myapp:${CIRCLE_SHA1}
+            docker push <your-account-id>.dkr.ecr.us-east-1.amazonaws.com/myapp:${CIRCLE_SHA1}
+
+  deploy:
+    docker:
+      - image: circleci/python:3.8
+    steps:
+      - checkout
+      - run:
+          name: Install AWS CLI
+          command: pip install awscli
+      - run:
+          name: Deploy to EC2
+          command: |
+            aws ecs update-service --cluster my-cluster --service my-service --force-new-deployment
 
 workflows:
   version: 2
-  test:
+  build_and_deploy:
     jobs:
-      - test
+      - build
+      - push_to_ecr:
+          requires:
+            - build
+      - hold:
+          type: approval
+          requires:
+            - push_to_ecr
+      - deploy:
+          requires:
+            - hold
