@@ -21,7 +21,8 @@ jobs:
             pip install -r cab_booking/requirements.txt
       - run:
           name: Build Docker image
-          command: docker build -t myapp:${CIRCLE_SHA1} -f cab_booking/Dockerfile
+          command: |
+            docker build -t myapp:${CIRCLE_SHA1} -f cab_booking/Dockerfile .
       - persist_to_workspace:
           root: .
           paths:
