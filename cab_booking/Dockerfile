@@ -5,7 +5,7 @@ ENV PYTHONUNBUFFERED 1
 
 WORKDIR /app
 
-COPY requirements.txt /app/
+COPY cab_booking/requirements.txt /app/
 
 RUN pip install -r requirements.txt
 
