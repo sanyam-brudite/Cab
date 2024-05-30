@@ -28,7 +28,7 @@ jobs:
           paths:
             - .
 
-  push_to_ecr:
+push_to_ecr:
     docker:
       - image: circleci/python:3.8
     steps:
@@ -39,7 +39,7 @@ jobs:
       - run:
           name: Install AWS CLI
           command: pip install awscli
-     - run:
+      - run:
           name: Authenticate with ECR
           command: |
             aws ecr get-login-password --region ${AWS_DEFAULT_REGION} | docker login --username AWS --password-stdin ${AWS_ECR_ACCOUNT_URL}
