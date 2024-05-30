@@ -101,13 +101,13 @@ workflows:
   build_and_deploy:
     jobs:
       - build
-      - push_to_ecr:
-          requires:
-            - build
-      - hold:
-          type: approval
-          requires:
-            - push_to_ecr
-      - deploy:
-          requires:
-            - hold
+      # - push_to_ecr:
+      #     requires:
+      #       - build
+      # - hold:
+      #     type: approval
+      #     requires:
+      #       - push_to_ecr
+      # - deploy:
+      #     requires:
+      #       - hold
