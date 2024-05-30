@@ -40,7 +40,7 @@ jobs:
       - run:
           name: Push Docker image to ECR
           command: |
-            aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin ${AWS_ECR_ACCOUNT_URL}
+            aws ecr get-login-password --region ${AWS_DEFAULT_REGION} | docker login --username AWS --password-stdin ${AWS_ECR_ACCOUNT_URL}
             docker push ${AWS_ECR_ACCOUNT_URL}/myapp:${CIRCLE_SHA1}
       - run:
           name: Deploy to ECS
