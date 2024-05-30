@@ -16,17 +16,17 @@ jobs:
       - run:
           name: Install dependencies
           command: |
-            cd cab_booking
+            cd docker
             python -m venv venv
             . venv/bin/activate
             pip install -r requirements.txt
       - run:
           name: Build Docker image
           command: |
-            cd cab_booking
+            cd docker
             docker build -t myapp:${CIRCLE_SHA1} .
       - run:
-          name: List Docker images
+          name: List Docker images after build
           command: docker images
       - persist_to_workspace:
           root: .
