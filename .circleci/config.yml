@@ -22,7 +22,6 @@ jobs:
       - run:
           name: Build Docker image
           command: |
-            cd docker
             docker build -t myapp:${CIRCLE_SHA1} -f cab_booking/Dockerfile .
       - persist_to_workspace:
           root: .
