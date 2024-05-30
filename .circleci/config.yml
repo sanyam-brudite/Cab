@@ -12,7 +12,8 @@ jobs:
       - image: circleci/python:3.8
     steps:
       - checkout
-      - setup_remote_docker
+      - setup_remote_docker:
+          version: 20.10.7
       - run:
           name: Install dependencies
           command: |
@@ -40,7 +41,8 @@ jobs:
       - image: circleci/python:3.8
     steps:
       - checkout
-      - setup_remote_docker
+      - setup_remote_docker:
+          version: 20.10.7
       - attach_workspace:
           at: .
       - run:
@@ -63,6 +65,8 @@ jobs:
       - run:
           name: Push Docker image to ECR
           command: |
+            aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin ${AWS_ECR_ACCOUNT_URL}
+            docker tag myapp:${CIRCLE_SHA1} ${AWS_ECR_ACCOUNT_URL}/myapp:${CIRCLE_SHA1}
             docker push ${AWS_ECR_ACCOUNT_URL}/myapp:${CIRCLE_SHA1}
 
   deploy:
