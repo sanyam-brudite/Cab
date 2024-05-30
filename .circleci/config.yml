@@ -16,9 +16,10 @@ jobs:
       - run:
           name: Install dependencies
           command: |
+            cd docker
             python -m venv venv
             . venv/bin/activate
-            pip install -r cab_booking/requirements.txt
+            pip install -r requirements.txt
       - run:
           name: Build Docker image
           command: |
@@ -28,7 +29,7 @@ jobs:
           paths:
             - .
 
-push_to_ecr:
+  push_to_ecr:
     docker:
       - image: circleci/python:3.8
     steps:
@@ -58,7 +59,7 @@ push_to_ecr:
           name: Install AWS CLI
           command: pip install awscli
       - run:
-          name: Deploy to EC2
+          name: Deploy to ECS
           command: |
             aws ecs update-service --cluster my-cluster --service my-service --force-new-deployment
 
