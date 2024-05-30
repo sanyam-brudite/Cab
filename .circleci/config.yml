@@ -24,12 +24,16 @@ jobs:
           command: |
             docker build -t myapp:${CIRCLE_SHA1} -f cab_booking/Dockerfile .
       - run:
+          name: Tag Docker image
+          command: |
+            docker tag myapp:${CIRCLE_SHA1} myapp:latest
+      - run:
           name: List Docker images after build
           command: docker images
       - persist_to_workspace:
           root: .
           paths:
-            - .
+            - cab_booking
 
   push_to_ecr:
     docker:
