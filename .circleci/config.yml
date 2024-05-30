@@ -39,14 +39,15 @@ jobs:
       - run:
           name: Install AWS CLI
           command: pip install awscli
-      - run:
+     - run:
           name: Authenticate with ECR
           command: |
             aws ecr get-login-password --region ${AWS_DEFAULT_REGION} | docker login --username AWS --password-stdin ${AWS_ECR_ACCOUNT_URL}
+      - run:
           name: Push Docker image to ECR
           command: |
-            docker tag myapp:${CIRCLE_SHA1} <your-account-id>.dkr.ecr.us-east-1.amazonaws.com/myapp:${CIRCLE_SHA1}
-            docker push <your-account-id>.dkr.ecr.us-east-1.amazonaws.com/myapp:${CIRCLE_SHA1}
+            docker tag myapp:${CIRCLE_SHA1} ${AWS_ECR_ACCOUNT_URL}/myapp:${CIRCLE_SHA1}
+            docker push ${AWS_ECR_ACCOUNT_URL}/myapp:${CIRCLE_SHA1}
 
   deploy:
     docker:
