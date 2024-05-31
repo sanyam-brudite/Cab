@@ -18,7 +18,7 @@ jobs:
           name: Install dependencies
           command: |
             python -m venv venv
-            venv/bin/activate
+            . venv/bin/activate
             pip install -r cab_booking/requirements.txt
       - run:
           name: Build Docker image
