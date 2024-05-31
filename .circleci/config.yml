@@ -12,17 +12,24 @@ jobs:
       - image: circleci/python:3.8
     steps:
       - checkout
-      - setup_remote_docker
+      - setup_remote_docker:
+          version: 20.10.7
       - run:
           name: Install dependencies
           command: |
             python -m venv venv
-            . venv/bin/activate
+            venv/bin/activate
             pip install -r cab_booking/requirements.txt
       - run:
           name: Build Docker image
-          command: |
-            docker build -t myapp:${CIRCLE_SHA1} -f cab_booking/Dockerfile .
+          command: docker build -t myapp:${CIRCLE_SHA1} -f cab_booking/Dockerfile .
+
+  push_to_ecr:
+    docker:
+      - image: circleci/python:3.8
+    steps:
+      - setup_remote_docker:
+          version: 20.10.7
       - run:
           name: Install AWS CLI
           command: pip install awscli
@@ -32,82 +39,33 @@ jobs:
             aws ecr get-login-password --region ${AWS_DEFAULT_REGION} | docker login --username AWS --password-stdin ${AWS_ECR_ACCOUNT_URL}
       - run:
           name: Tag Docker image
-          command: |
-            docker tag myapp:${CIRCLE_SHA1} myapp:latest
-      - run:
-          name: List Docker images after build
-          command: docker images
+          command: docker tag myapp:${CIRCLE_SHA1} myapp:latest
       - run:
           name: Push Docker image to ECR
           command: |
-            aws ecr get-login-password --region ${AWS_DEFAULT_REGION} | docker login --username AWS --password-stdin ${AWS_ECR_ACCOUNT_URL}
+            docker tag myapp:${CIRCLE_SHA1} ${AWS_ECR_ACCOUNT_URL}/myapp:${CIRCLE_SHA1}
             docker push ${AWS_ECR_ACCOUNT_URL}/myapp:${CIRCLE_SHA1}
+
+  deploy:
+    docker:
+      - image: circleci/python:3.8
+    steps:
+      - run:
+          name: Install AWS CLI
+          command: pip install awscli
       - run:
           name: Deploy to ECS
           command: |
             aws ecs update-service --cluster my-cluster --service my-service --force-new-deployment
-      - persist_to_workspace:
-          root: .
-          paths:
-            - cab_booking
-
-  # push_to_ecr:
-  #   docker:
-  #     - image: circleci/python:3.8
-  #   steps:
-  #     - checkout
-  #     - setup_remote_docker
-  #     - attach_workspace:
-  #         at: .
-  #     - run:
-  #         name: Install AWS CLI
-  #         command: pip install awscli
-  #     - run:
-  #         name: Authenticate with ECR
-  #         command: |
-  #           aws ecr get-login-password --region ${AWS_DEFAULT_REGION} | docker login --username AWS --password-stdin ${AWS_ECR_ACCOUNT_URL}
-  #     - run:
-  #         name: List Docker images before tagging
-  #         command: docker images
-  #     - run:
-  #         name: Tag Docker image
-  #         command: |
-  #           docker tag myapp:${CIRCLE_SHA1} ${AWS_ECR_ACCOUNT_URL}/myapp:${CIRCLE_SHA1}
-  #     - run:
-  #         name: List Docker images after tagging
-  #         command: docker images
-  #     - run:
-  #         name: Push Docker image to ECR
-  #         command: |
-  #           aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin ${AWS_ECR_ACCOUNT_URL}
-  #           docker tag myapp:${CIRCLE_SHA1} ${AWS_ECR_ACCOUNT_URL}/myapp:${CIRCLE_SHA1}
-  #           docker push ${AWS_ECR_ACCOUNT_URL}/myapp:${CIRCLE_SHA1}
-
-  # deploy:
-  #   docker:
-  #     - image: circleci/python:3.8
-  #   steps:
-  #     - checkout
-  #     - run:
-  #         name: Install AWS CLI
-  #         command: pip install awscli
-  #     - run:
-  #         name: Deploy to ECS
-  #         command: |
-  #           aws ecs update-service --cluster my-cluster --service my-service --force-new-deployment
 
 workflows:
   version: 2
   build_and_deploy:
     jobs:
       - build
-      # - push_to_ecr:
-      #     requires:
-      #       - build
-      # - hold:
-      #     type: approval
-      #     requires:
-      #       - push_to_ecr
-      # - deploy:
-      #     requires:
-      #       - hold
+      - push_to_ecr:
+          requires:
+            - build
+      - deploy:
+          requires:
+            - push_to_ecr
