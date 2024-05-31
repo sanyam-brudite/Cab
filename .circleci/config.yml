@@ -15,11 +15,17 @@ jobs:
       - setup_remote_docker:
           version: 20.10.7
       - run:
+          name: Create virtual environment
+          command: python -m venv venv
+      - run:
+          name: Upgrade pip and setuptools
+          command: |
+            venv/bin/pip install --upgrade pip
+            venv/bin/pip install --upgrade setuptools
+      - run:
           name: Install dependencies
           command: |
-            python -m venv venv
-            . venv/bin/activate
-            pip install -r cab_booking/requirements.txt
+            venv/bin/pip install -r cab_booking/requirements.txt
       - run:
           name: Build Docker image
           command: docker build -t myapp:${CIRCLE_SHA1} -f cab_booking/Dockerfile .
