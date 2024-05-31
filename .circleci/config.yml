@@ -3,39 +3,32 @@ version: 2.1
 executors:
   docker-executor:
     docker:
-      - image: circleci/python:3.8
-      - image: circleci/postgres:12.3
+      - image: circleci/python:3.9  # Ensure the image has Python 3.9
+    working_directory: ~/repo
 
 jobs:
-  build:
-    docker:
-      - image: circleci/python:3.8
+  build_image:
+    executor: docker-executor
     steps:
-      - checkout
       - setup_remote_docker:
           version: 20.10.7
-      - run:
-          name: Create virtual environment
-          command: python -m venv venv
-      - run:
-          name: Upgrade pip and setuptools
-          command: |
-            venv/bin/pip install --upgrade pip
-            venv/bin/pip install --upgrade setuptools
+      - checkout
       - run:
           name: Install dependencies
           command: |
-            venv/bin/pip install -r cab_booking/requirements.txt
+            python -m venv venv
+            . venv/bin/activate
+            pip install -r requirements.txt
       - run:
           name: Build Docker image
-          command: docker build -t myapp:${CIRCLE_SHA1} -f cab_booking/Dockerfile .
+          command: docker build -t myapp:${CIRCLE_SHA1} .
 
-  push_to_ecr:
-    docker:
-      - image: circleci/python:3.8
+  push_image_to_ecr:
+    executor: docker-executor
     steps:
       - setup_remote_docker:
           version: 20.10.7
+      - checkout
       - run:
           name: Install AWS CLI
           command: pip install awscli
@@ -44,23 +37,20 @@ jobs:
           command: |
             aws ecr get-login-password --region ${AWS_DEFAULT_REGION} | docker login --username AWS --password-stdin ${AWS_ECR_ACCOUNT_URL}
       - run:
-          name: Tag Docker image
-          command: docker tag myapp:${CIRCLE_SHA1} myapp:latest
-      - run:
           name: Push Docker image to ECR
           command: |
             docker tag myapp:${CIRCLE_SHA1} ${AWS_ECR_ACCOUNT_URL}/myapp:${CIRCLE_SHA1}
             docker push ${AWS_ECR_ACCOUNT_URL}/myapp:${CIRCLE_SHA1}
 
-  deploy:
-    docker:
-      - image: circleci/python:3.8
+  deploy_to_ec2:
+    executor: docker-executor
     steps:
+      - checkout
       - run:
           name: Install AWS CLI
           command: pip install awscli
       - run:
-          name: Deploy to ECS
+          name: Deploy to EC2
           command: |
             aws ecs update-service --cluster my-cluster --service my-service --force-new-deployment
 
@@ -68,10 +58,10 @@ workflows:
   version: 2
   build_and_deploy:
     jobs:
-      - build
-      - push_to_ecr:
+      - build_image
+      - push_image_to_ecr:
           requires:
-            - build
-      - deploy:
+            - build_image
+      - deploy_to_ec2:
           requires:
-            - push_to_ecr
+            - push_image_to_ecr
