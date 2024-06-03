@@ -7,7 +7,7 @@ WORKDIR /app
 
 COPY cab_booking/requirements.txt /app/
 
-RUN pip install -r cab_booking/requirements.txt
+RUN pip install -r requirements.txt
 
 COPY . .
 
