@@ -23,6 +23,10 @@ jobs:
           name: Build Docker image
           command: |
             docker build -t myapp:${CIRCLE_SHA1} -f cab_booking/Dockerfile .
+      - run:
+          name: List Docker images
+          command: |
+            docker images
       - persist_to_workspace:
           root: .
           paths:
@@ -43,6 +47,10 @@ jobs:
           name: Authenticate with ECR
           command: |
             aws ecr get-login-password --region ${AWS_DEFAULT_REGION} | docker login --username AWS --password-stdin ${AWS_ECR_ACCOUNT_URL}
+      - run:
+          name: List Docker images
+          command: |
+            docker images
       - run:
           name: Push Docker image to ECR
           command: |
