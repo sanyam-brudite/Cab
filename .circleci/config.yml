@@ -27,6 +27,9 @@ jobs:
           name: Save Docker image to a tar file
           command: |
             docker save -o myapp_${CIRCLE_SHA1}.tar myapp:${CIRCLE_SHA1}
+      - run:
+          name: List files in project directory
+          command: ls -l
       - persist_to_workspace:
           root: .
           paths:
