@@ -9,8 +9,8 @@ COPY cab_booking/requirements.txt /app/
 
 RUN pip install -r requirements.txt
 
-COPY . .
+COPY . /app/
 
 EXPOSE 8000
 
-CMD ["python", "app.py", "sh","migrations.sh"]
+CMD ["sh","migrations.sh"]
