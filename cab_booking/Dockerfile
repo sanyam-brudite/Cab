@@ -7,7 +7,6 @@ WORKDIR /app
 
 COPY cab_booking/requirements.txt /app/
 
-RUN pip install --upgrade pip setuptools
 RUN pip install -r requirements.txt
 
 COPY . .
