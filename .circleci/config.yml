@@ -23,17 +23,10 @@ jobs:
           name: Build Docker image
           command: |
             docker build -t myapp:${CIRCLE_SHA1} -f cab_booking/Dockerfile .
-      - run:
-          name: Save Docker image to a tar file
-          command: |
-            docker save -o myapp_${CIRCLE_SHA1}.tar myapp:${CIRCLE_SHA1}
-      - run:
-          name: List files in project directory
-          command: ls -l
       - persist_to_workspace:
           root: .
           paths:
-            - myapp_${CIRCLE_SHA1}.tar
+            - .
 
   push_to_ecr:
     docker:
@@ -46,10 +39,6 @@ jobs:
       - run:
           name: Install AWS CLI
           command: pip install awscli
-      - run:
-          name: Load Docker image from tar file
-          command: |
-            docker load -i myapp_${CIRCLE_SHA1}.tar
       - run:
           name: Authenticate with ECR
           command: |
