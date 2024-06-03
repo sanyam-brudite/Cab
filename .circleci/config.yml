@@ -14,9 +14,14 @@ jobs:
           version: 20.10.7
       - checkout
       - run:
-          name: Install dependencies
+          name: Upgrade pip and setuptools
           command: |
             python -m venv venv
+            . venv/bin/activate
+            pip install --upgrade pip setuptools
+      - run:
+          name: Install dependencies
+          command: |
             . venv/bin/activate
             pip install -r cab_booking/requirements.txt
       - run:
