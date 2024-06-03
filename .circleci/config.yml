@@ -3,7 +3,7 @@ version: 2.1
 executors:
   docker-executor:
     docker:
-      - image: circleci/python:3.9  # Ensure the image has Python 3.9
+      - image: circleci/python:3.9
     working_directory: ~/repo
 
 jobs:
@@ -23,7 +23,10 @@ jobs:
           name: Build Docker image
           command: docker build -t myapp:${CIRCLE_SHA1} -f cab_booking/Dockerfile .
 
-  push_image_to_ecr:
+  approval:
+    type: approval
+
+  push_and_deploy:
     executor: docker-executor
     steps:
       - setup_remote_docker:
@@ -41,14 +44,6 @@ jobs:
           command: |
             docker tag myapp:${CIRCLE_SHA1} ${AWS_ECR_ACCOUNT_URL}/myapp:${CIRCLE_SHA1}
             docker push ${AWS_ECR_ACCOUNT_URL}/myapp:${CIRCLE_SHA1}
-
-  deploy_to_ec2:
-    executor: docker-executor
-    steps:
-      - checkout
-      - run:
-          name: Install AWS CLI
-          command: pip install awscli
       - run:
           name: Deploy to EC2
           command: |
@@ -59,9 +54,10 @@ workflows:
   build_and_deploy:
     jobs:
       - build_image
-      - push_image_to_ecr:
+      - approval:
+          type: approval
           requires:
             - build_image
-      - deploy_to_ec2:
+      - push_and_deploy:
           requires:
-            - push_image_to_ecr
+            - approval
