@@ -111,7 +111,7 @@ jobs:
           command: |
             docker build -t myapp:${CIRCLE_SHA1} -f cab_booking/Dockerfile .
             docker tag myapp:${CIRCLE_SHA1} ${AWS_ECR_ACCOUNT_URL}/myapp:${CIRCLE_SHA1}
-            docker push ${AWS_ECR_ACCOUNT_URL}:${CIRCLE_SHA1}
+            docker push ${AWS_ECR_ACCOUNT_URL}/myapp:${CIRCLE_SHA1}
 
   deploy:
     docker:
